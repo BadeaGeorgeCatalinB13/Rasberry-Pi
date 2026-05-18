@@ -1,0 +1,155 @@
+# 🧠 Anomaly Detector — ML Network Traffic Monitor
+
+> Sistem de detecție a anomaliilor în traficul de rețea, bazat pe **Machine Learning (Isolation Forest)**, rulat pe **Raspberry Pi 5**. Analizează traficul live și alertează când detectează comportament suspect.
+
+---
+
+## 🔍 Descriere
+
+**Anomaly Detector** este un sistem de securitate bazat pe ML care învață cum arată traficul normal al rețelei și detectează în timp real orice abatere semnificativă. Spre deosebire de sistemele bazate pe reguli fixe, acest sistem se adaptează la profilul specific al rețelei monitorizate.
+
+### Flux de funcționare
+
+```
+Colectare date normale → Antrenare model ML → Detectie live anomalii
+   (colectare.py)          (antrenare.py)         (detectie.py)
+```
+
+---
+
+## ✨ Funcționalități
+
+- 📡 **Captare live** a traficului de rețea prin `scapy` pe interfața `wlan0`
+- 📊 **Extragere features** per fereastră de timp: pachete, bytes, IP-uri unice, porturi unice, ratio TCP/UDP
+- 🤖 **Model Isolation Forest** antrenat pe trafic normal al rețelei locale
+- ⚠️ **Alertă în timp real** în terminal la detectarea traficului anormal
+- 💾 **Salvare automată** a datelor de antrenament în format CSV
+
+---
+
+## 🛠️ Tehnologii folosite
+
+| Tehnologie | Rol |
+|---|---|
+| Python 3.13 | Limbaj principal |
+| Scapy | Captare și analiză pachete de rețea |
+| Scikit-learn | Model ML Isolation Forest |
+| Pandas | Procesare date / CSV |
+| Joblib | Salvare și încărcare model ML |
+| Raspberry Pi 5 | Hardware de rulare |
+
+---
+
+## 📦 Instalare
+
+### Cerințe
+
+- Raspberry Pi 5 cu Raspberry Pi OS
+- Python 3.13+
+
+### Setup
+
+```bash
+# Clonează repository-ul
+git clone https://github.com/BadeaGeorgeCatalinB13/Rasberry-Pi.git
+cd Rasberry-Pi/P2
+
+# Creează un virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Instalează dependențele
+pip install scapy pandas scikit-learn joblib
+```
+
+---
+
+## 🚀 Utilizare
+
+### Pasul 1 — Colectează date de trafic normal
+
+```bash
+sudo python3 colectare.py
+```
+
+Scriptul captează **30 de ferestre** de câte 10 secunde de trafic normal și generează `trafic_normal.csv`.
+
+> ⚠️ Rulează când rețeaua are trafic obișnuit, fără atacuri sau anomalii.
+
+### Pasul 2 — Antrenează modelul ML
+
+```bash
+python3 antrenare.py
+```
+
+Antrenează un model **Isolation Forest** pe datele colectate și salvează `model_anomalii.joblib`.
+
+### Pasul 3 — Detectare live anomalii
+
+```bash
+sudo python3 detectie.py
+```
+
+Monitorizează traficul în timp real și afișează alerte când detectează comportament anormal.
+
+---
+
+## 📊 Format date (`trafic_normal.csv`)
+
+| Feature | Descriere |
+|---|---|
+| `packet_count` | Număr pachete în fereastra de timp |
+| `byte_count` | Total bytes transferați |
+| `unique_ips` | IP-uri unice observate |
+| `unique_ports` | Porturi unice utilizate |
+| `tcp_ratio` | Proporția pachetelor TCP |
+| `udp_ratio` | Proporția pachetelor UDP |
+
+---
+
+## 📱 Exemplu output terminal
+
+```
+[*] Detectorul de anomalii ML rulează live...
+[+] Trafic normal. Pachete procesate: 142
+[+] Trafic normal. Pachete procesate: 98
+⚠️ [ALERTĂ ML] Trafic anormal detectat! Pachete: 847, Octeți: 124832, IP-uri unice: 23
+[+] Trafic normal. Pachete procesate: 115
+```
+
+---
+
+## 📁 Structură proiect
+
+```
+P2/
+├── colectare.py            # Colectare date trafic normal
+├── antrenare.py            # Antrenare model Isolation Forest
+├── detectie.py             # Detectare live anomalii
+├── trafic_normal.csv       # Date de antrenament (auto-generat)
+├── model_anomalii.joblib   # Model ML salvat (auto-generat)
+├── venv/                   # Virtual environment
+└── README.md
+```
+
+---
+
+## 🧠 Cum funcționează Isolation Forest
+
+Isolation Forest este un algoritm de **detecție a anomaliilor nesupervizat**. Izolează punctele de date construind arbori de decizie aleatori — punctele anomale sunt izolate mai rapid (cu mai puține splits) decât cele normale, primind un scor de anomalie mai mic.
+
+- `contamination=0.05` → estimează că ~5% din date pot fi anomalii
+- Scor `-1` → anomalie detectată
+- Scor `+1` → trafic normal
+
+---
+
+## ⚠️ Disclaimer
+
+Acest proiect este destinat exclusiv monitorizării propriei rețele locale. Captarea pachetelor pe rețele fără permisiune explicită este ilegală.
+
+---
+
+## 📄 Licență
+
+MIT License — liber de utilizat și modificat.
